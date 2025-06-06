@@ -1,0 +1,19 @@
+{
+  "name": "login_backend",
+  "version": "1.0.0",
+  "description": "login",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [
+    "node",
+    "login"
+  ],
+  "author": "Debargha_Samanta",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0"
+  }
+}
