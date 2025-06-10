@@ -1,5 +1,6 @@
 import mongoose ,{Schema} from "mongoose"
-
+import bcrypt from "bcrypt"
+import jwt from "jsonwebtoken"
 const userSchema = new Schema({
     fullname:{
         type: String,
@@ -22,10 +23,6 @@ const userSchema = new Schema({
         required: true,
         unique: true
     },
-    designation: {
-        type: String,
-        required: true
-    },
     password: {
         type: String,
         required: [true,"password is required"] // should be hashed before saving
@@ -34,17 +31,17 @@ const userSchema = new Schema({
         type: String, // URL to the uploaded ID proof
         required: true
     },
-    photo: {
+    Adharphoto: {
         type: String, // URL to the uploaded photo cloudinary
         required: true
     },
     department: {
         type: String,
-        enum: ["Logistics and Supply","Operations Planning","Intelligence and Situation Monitoring Cell","Driver"],
+        enum: ["Logistics and Operation Planning","Driver"],
         required: true
     },
     refreshToken:{
-        require:true
+        type:String
     },
     vehicleType: {
     type: String,
@@ -95,8 +92,8 @@ userSchema.methods.generateAccessToken = function(){
         {
             _id: this._id,
             email: this.email,
-            username: this.username,
-            fullName: this.fullName
+            department: this.department
+
         },
         process.env.ACCESS_TOKEN_SECRET,
         {
@@ -108,6 +105,7 @@ userSchema.methods.generateRefreshToken = function(){
     return jwt.sign(
         {
             _id: this._id,
+            department: this.department,
             
         },
         process.env.REFRESH_TOKEN_SECRET,
@@ -116,4 +114,4 @@ userSchema.methods.generateRefreshToken = function(){
         }
     )
 }
-export const USer = mongoose.model("User",userSchema)
+export const User = mongoose.model("User",userSchema)
