@@ -14,12 +14,13 @@ const generateAccessAndRefreshTokens = async (userId) => {
 
     user.refreshToken = refreshToken;
     await user.save({ validateBeforeSave: false });
+    return { accessToken, refreshToken };
     }
     catch(error){
         throw new ApiError(500,"Something went wrong generationg tokens")
     }
 
-    return { accessToken, refreshToken };
+    
 };
 
 const registerUser = asyncHandler(async (req,res)=>{
@@ -136,9 +137,10 @@ const registerUser = asyncHandler(async (req,res)=>{
 
 // 🚀 Login Controller
 const loginUser = asyncHandler(async (req, res) => {
+    console.log(req.body)
     const emailId = req.body?.emailId;
     const password = req.body?.password;
-
+    
     if (!emailId ) {
         throw new ApiError(400, "Email is required");
     }
@@ -200,7 +202,7 @@ const logoutUser = asyncHandler(async(req,res)=>{
     .json(new ApiResponse(200, {}, "User logged Out"))
 })
 const updateAccountDetails = asyncHandler(async(req, res) => {
-    const {fullname, emailId,adharNo,phoneNumber} = req.body
+    const {fullname, emailId, phoneNumber} = req.body
 
     if (!fullname || !emailId) {
         throw new ApiError(400, "All fields are required")
@@ -212,7 +214,6 @@ const updateAccountDetails = asyncHandler(async(req, res) => {
             $set: {
                 fullname,
                 emailId: emailId,
-                adharNo:adharNo,
                 phoneNumber:phoneNumber
             }
         },
@@ -304,4 +305,43 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
 })
 
-export {registerUser,loginUser,logoutUser,updateAccountDetails,getCurrentUser,changeCurrentPassword,refreshAccessToken} 
+const updateDriverDetails = asyncHandler(async (req, res) => {
+  const { vehicleType, vehicleNumber, licenseNumber } = req.body;
+
+  // Basic validation
+  if (!vehicleType || !vehicleNumber || !licenseNumber) {
+    throw new ApiError(400, "All vehicle fields are required.");
+  }
+
+  const validTypes = ["Box Trucks", "Refrigerated Trucks", "Mini-Van", "Container Trucks"];
+  if (!validTypes.includes(vehicleType)) {
+    throw new ApiError(400, "Invalid vehicle type.");
+  }
+
+  if (!/^[A-Z]{2}\d{2}[A-Z]{2}\d{4}$/.test(vehicleNumber)) {
+    throw new ApiError(400, "Vehicle number must follow the format: XX00XX0000.");
+  }
+
+  if (!/^[A-Z0-9]{15}$/.test(licenseNumber)) {
+    throw new ApiError(400, "License number must be 15 alphanumeric characters.");
+  }
+
+  const updatedUser = await User.findByIdAndUpdate(
+    req.user._id,
+    {
+      $set: {
+        vehicleType,
+        vehicleNumber,
+        licenseNumber
+      }
+    },
+    { new: true }
+  ).select("-password");
+
+  return res.status(200).json(
+    new ApiResponse(200, updatedUser, "Driver vehicle details updated successfully")
+  );
+});
+
+
+export {registerUser,loginUser,logoutUser,updateAccountDetails,getCurrentUser,changeCurrentPassword,refreshAccessToken,updateDriverDetails} 

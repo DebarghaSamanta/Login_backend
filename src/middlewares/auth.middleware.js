@@ -29,4 +29,11 @@ const verifyJWT = asyncHandler(async(req, _, next) => {
     
 })
 
-export {verifyJWT}
+const allowOnlyDrivers = (req, res, next) => {
+  if (req.user?.department !== "Driver") {
+    throw new ApiError(403, "Access denied: Only drivers can perform this action.");
+  }
+  next();
+};
+
+export {verifyJWT,allowOnlyDrivers}
