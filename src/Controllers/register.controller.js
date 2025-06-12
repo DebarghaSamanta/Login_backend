@@ -138,14 +138,14 @@ const registerUser = asyncHandler(async (req,res)=>{
 // 🚀 Login Controller
 const loginUser = asyncHandler(async (req, res) => {
     console.log(req.body)
-    const emailId = req.body?.emailId;
+    const phoneNumber = req.body?.phoneNumber;
     const password = req.body?.password;
     
-    if (!emailId ) {
+    if (!phoneNumber) {
         throw new ApiError(400, "Email is required");
     }
 
-    const user = await User.findOne({ emailId });
+    const user = await User.findOne({ phoneNumber });
 
     if (!user) {
         throw new ApiError(404, "User not found. Please register first.");
