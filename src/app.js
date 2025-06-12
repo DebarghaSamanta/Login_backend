@@ -12,8 +12,7 @@ app.use(express.json())
 app.use(express.urlencoded({extended:true}))
 app.use(express.static("public"))
 app.use(cookieParser())
-app.use(bodyParser.json()) // for parsing application/json
-app.use(bodyParser.urlencoded({ extended: true }))
+
 
 
 import userRouter from "./routes/user.routes.js"

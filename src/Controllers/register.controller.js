@@ -3,8 +3,10 @@ import { ApiError } from "../utils/ApiError.js";
 import {User} from "../models/user.models.js"
 import { UploadOnCloudinary } from "../utils/cloudinary.js";
 import {ApiResponse} from "../utils/ApiResponse.js";
-
+import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 const generateAccessAndRefreshTokens = async (userId) => {
+    try{
     const user = await User.findById(userId);
 
     const accessToken = user.generateAccessToken();
@@ -12,6 +14,10 @@ const generateAccessAndRefreshTokens = async (userId) => {
 
     user.refreshToken = refreshToken;
     await user.save({ validateBeforeSave: false });
+    }
+    catch(error){
+        throw new ApiError(500,"Something went wrong generationg tokens")
+    }
 
     return { accessToken, refreshToken };
 };
@@ -61,13 +67,13 @@ const registerUser = asyncHandler(async (req,res)=>{
     
 
     //file uploading 
-    const AdharUrl = req.files?.Adharphoto?.[0]
-    const govtIdProofUrl = req.files?.govtIdProof?.[0]
+    const AdharUrl = req.files?.Adharphoto[0]?.path
+    const govtIdProofUrl = req.files?.govtIdProof[0]?.path
     if(!AdharUrl || !govtIdProofUrl)
         throw new ApiError(502,"Photo required")
-    const adharPhotoResult = await UploadOnCloudinary(AdharUrl.path);
-    const govtIdResult = await UploadOnCloudinary(govtIdProofUrl.path);
-    if(!adharPhotoResult || !govtIdResult)
+    const Adharphoto = await UploadOnCloudinary(AdharUrl);
+    const govtIdProof = await UploadOnCloudinary(govtIdProofUrl);
+    if(!Adharphoto || !govtIdProof)
         throw new ApiError(500, "File upload failed.")
     const userData = {
       fullname,
@@ -76,11 +82,11 @@ const registerUser = asyncHandler(async (req,res)=>{
       adharNo,
       password,
       department,
-      Adharphoto: adharPhotoResult.url,
-      govtIdProof: govtIdResult.url,
+      Adharphoto: Adharphoto.url,
+      govtIdProof: govtIdProof.url,
     };
     
-
+    
     //for driver specifically
     if (department === "Driver") {
       const {vehicleType,
@@ -130,14 +136,11 @@ const registerUser = asyncHandler(async (req,res)=>{
 
 // 🚀 Login Controller
 const loginUser = asyncHandler(async (req, res) => {
-    const safeBody = Object.assign({}, req.body);
-    const {
-      emailId,
-      password
-      } = safeBody
+    const emailId = req.body?.emailId;
+    const password = req.body?.password;
 
-    if (!emailId || !password) {
-        throw new ApiError(400, "Email and password are required");
+    if (!emailId ) {
+        throw new ApiError(400, "Email is required");
     }
 
     const user = await User.findOne({ emailId });
